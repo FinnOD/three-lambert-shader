@@ -54,22 +54,17 @@ const sphere2 = new THREE.Mesh(
 sphere2.position.set(0, 2, -2)
 scene.add(sphere2)
 
-
+// Plane
 let mat = new THREE.MeshLambertMaterial({ color: '#444' });
 const plane = new THREE.Mesh(
   new THREE.PlaneGeometry(10, 10, 10, 10),
   mat
 )
 
-renderer.compile(scene, camera);
-const gl = renderer.getContext();
-console.log(
-  // gl.getShaderSource(mat.program.fragmentShader)
-);
-
 plane.rotation.set(-Math.PI / 2, 0, 0)
 plane.receiveShadow = true
 scene.add(plane)
+
 
 const clock = new THREE.Clock()
 
