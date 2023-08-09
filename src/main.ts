@@ -11,25 +11,30 @@ import vertexShader from '/@/shaders/vertex.glsl'
 import fragmentShader from '/@/shaders/fragment.glsl'
 
 // Lights
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.1)
 scene.add(ambientLight)
 
-const directionalLight = new THREE.DirectionalLight('#ffffff', 1)
-directionalLight.castShadow = true
-directionalLight.shadow.mapSize.set(1024, 1024)
-directionalLight.shadow.camera.far = 15
-directionalLight.shadow.normalBias = 0.05
-directionalLight.position.set(0.25, 2, 2.25)
+const pointLight = new THREE.PointLight('#ffffff', 100);
+pointLight.position.set(10, 5, 10);
+scene.add(pointLight)
 
-scene.add(directionalLight)
+
+// Custom shaded sphere
+const uniformsDefaults = {
+  uTime: { value: 0 },
+  color: { value: new THREE.Color('#ff0000')}
+}
+
+const uniforms = THREE.UniformsUtils.merge([
+  THREE.UniformsLib['lights'],
+  uniformsDefaults,
+])
 
 const sphereMaterial = new THREE.ShaderMaterial({
-  uniforms: {
-    uTime: { value: 0 },
-    uFrequency: { value: new THREE.Vector2(20, 15) },
-  },
+  uniforms: uniforms,
   vertexShader,
   fragmentShader,
+  lights: true
 })
 
 const sphere = new THREE.Mesh(
@@ -37,30 +42,30 @@ const sphere = new THREE.Mesh(
   sphereMaterial,
 )
 
-sphere.position.set(0, 2, 0)
-sphere.castShadow = true
+sphere.position.set(0, 2, 2)
 scene.add(sphere)
 
-const DirectionalLightFolder = gui.addFolder({
-  title: 'Directional Light',
-})
+// Default shaded sphere
+const sphere2 = new THREE.Mesh(
+  new THREE.SphereGeometry(1, 32, 32),
+  new THREE.MeshStandardMaterial({ color: '#ff0000' }),
+)
 
-Object.keys(directionalLight.position).forEach(key => {
-  DirectionalLightFolder.addInput(
-    directionalLight.position,
-    key as keyof THREE.Vector3,
-    {
-      min: -100,
-      max: 100,
-      step: 1,
-    },
-  )
-})
+sphere2.position.set(0, 2, -2)
+scene.add(sphere2)
 
+
+let mat = new THREE.MeshLambertMaterial({ color: '#444' });
 const plane = new THREE.Mesh(
   new THREE.PlaneGeometry(10, 10, 10, 10),
-  new THREE.MeshToonMaterial({ color: '#444' }),
+  mat
 )
+
+renderer.compile(scene, camera);
+const gl = renderer.getContext();
+console.log(
+  // gl.getShaderSource(mat.program.fragmentShader)
+);
 
 plane.rotation.set(-Math.PI / 2, 0, 0)
 plane.receiveShadow = true
@@ -72,6 +77,8 @@ const loop = () => {
   const elapsedTime = clock.getElapsedTime()
 
   sphereMaterial.uniforms.uTime.value = elapsedTime
+
+  pointLight.position.set(10*Math.sin(elapsedTime), 3+(3*Math.sin(elapsedTime/4)), 10*Math.cos(elapsedTime));
 
   fpsGraph.begin()
 
